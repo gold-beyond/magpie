@@ -1045,7 +1045,12 @@ func piLikeKeyed(at place, id, name, dir string, key func() string) *Agent {
 						forget(gone)
 						return piScopeWithout(path)
 					}
-					if ref, ok := strings.CutPrefix(v, magpieID+"/"); ok && isMagpie(ref) {
+					// A magpie/ pick always refreshes the provider block:
+					// settings.json naming a model models.json doesn't
+					// list leaves Pi unable to start it, and the pick may
+					// arrive before the process can resolve its provider
+					// (a channel just signed in, #2373).
+					if _, ok := strings.CutPrefix(v, magpieID+"/"); ok {
 						if _, has := edit.GetJSON(modelsPath, "providers."+magpieID); !has {
 							if p, _ := get("defaultProvider"); p != magpieID {
 								before.take()
